@@ -224,8 +224,12 @@
     let current;
     let turn = 0;
 
-    const crewVisible = () => window.scrollY < hero.offsetHeight * 0.15
-      && mates.every((m) => parseFloat(getComputedStyle(m).opacity) > 0.9);
+    // Das Team ist sichtbar, wenn es ausgestiegen ist und im Bildschirm steht
+    const crewVisible = () => {
+      const r = crew.getBoundingClientRect();
+      return r.bottom > 80 && r.top < window.innerHeight - 30
+        && mates.every((m) => parseFloat(getComputedStyle(m).opacity) > 0.9);
+    };
 
     const say = (i) => {
       if (!crewVisible()) return;
@@ -256,7 +260,7 @@
     // Nach dem Aussteigen spricht zuerst der Chef, danach reihum
     introTl.add(() => {
       say(0);
-      gsap.timeline({ repeat: -1, delay: 6.5, repeatDelay: 6.5 }).add(() => {
+      gsap.timeline({ repeat: -1, delay: 5, repeatDelay: 5 }).add(() => {
         turn = (turn + 1) % mates.length;
         say(turn);
       });
@@ -267,7 +271,11 @@
     mates.forEach((mate, i) => mate.addEventListener('click', () => { turn = i; say(i); }));
 
     ScrollTrigger.create({
-      trigger: hero, start: 'top top', end: '15% top',
+      trigger: crew, start: 'bottom bottom',
+      onEnter: () => say(turn),
+    });
+    ScrollTrigger.create({
+      trigger: hero, start: 'top top', end: '45% top',
       onLeave: () => { if (current) current.kill(); gsap.to(bubble, { autoAlpha: 0, duration: 0.2 }); },
     });
   };
@@ -280,12 +288,12 @@
 
     // Der Van fährt davon, das Logo steigt langsamer
     if (hero) {
-      gsap.timeline({ scrollTrigger: { trigger: hero, start: 'top top', end: 'bottom top', scrub: 0.6, invalidateOnRefresh: true } })
+      gsap.timeline({ scrollTrigger: { trigger: hero, start: '45% top', end: 'bottom top', scrub: 0.6, invalidateOnRefresh: true } })
         .to('.mate-exit', { x: (i, el) => toDoor(el), autoAlpha: 0, scale: 0.8, transformOrigin: '50% 100%', duration: 0.25, stagger: 0.04, ease: 'power1.in' }, 0)
         .to('.van-door', { scaleX: 0, transformOrigin: '0% 50%', duration: 0.1 }, 0.33)
         .to('.van-exit', { x: () => -window.innerWidth * 1.25, duration: 0.6, ease: 'power2.in' }, 0.4)
         .to('.spin2', { rotation: 1080, transformOrigin: '50% 50%', duration: 0.6, ease: 'power2.in' }, 0.4)
-        .to('.logo', { y: -90, duration: 1, ease: 'none' }, 0);
+        .to('.logo', { y: -60, duration: 1, ease: 'none' }, 0);
     }
 
     // Laufband: läuft immer, dreht beim schnellen Scrollen auf und folgt der Richtung
@@ -502,6 +510,16 @@
       root.classList.add('motion');
       if (hero) talk(hero, intro(hero));
       scenes(hero);
+    });
+    gsap.matchMedia().add('(prefers-reduced-motion: reduce)', () => {
+      const crew = $('.crew');
+      if (!crew) return undefined;
+      const bubble = document.createElement('p');
+      bubble.className = 'bubble bubble--static';
+      bubble.setAttribute('aria-hidden', 'true');
+      bubble.textContent = SAYINGS[0][0];
+      crew.appendChild(bubble);
+      return () => bubble.remove();
     });
     root.classList.remove('intro');
   };
