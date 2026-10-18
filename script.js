@@ -94,27 +94,6 @@
     return el;
   };
 
-  // Mündungsfeuer mit Funkenflug
-  const burst = (layer, x, y, size = 1) => {
-    const flash = spawn(layer, 'muzzle', x, y);
-    gsap.fromTo(flash, { scale: 0.2 * size, autoAlpha: 1, rotation: gsap.utils.random(0, 90) }, {
-      scale: 1.4 * size, autoAlpha: 0, duration: 0.3, ease: 'power2.out', onComplete: () => flash.remove(),
-    });
-    for (let i = 0; i < 8; i += 1) {
-      const spark = spawn(layer, 'spark', x, y);
-      const angle = Math.random() * Math.PI * 2;
-      const distance = gsap.utils.random(30, 100) * size;
-      gsap.fromTo(spark, { x: 0, y: 0, rotation: (angle * 180) / Math.PI, autoAlpha: 1 }, {
-        x: Math.cos(angle) * distance,
-        y: Math.sin(angle) * distance + 24,
-        autoAlpha: 0,
-        duration: gsap.utils.random(0.35, 0.65),
-        ease: 'power2.out',
-        onComplete: () => spark.remove(),
-      });
-    }
-  };
-
   // Staubwolke, z. B. beim Bremsen oder wenn eine Kiste aufschlägt
   const dust = (layer, x, y, { count = 7, direction = 1, className = 'dust', spread = 110 } = {}) => {
     for (let i = 0; i < count; i += 1) {
@@ -131,7 +110,7 @@
     }
   };
 
-  /* ---------- Vorspann: D schlägt ein, Schüsse, der Van rast herein ---------- */
+  /* ---------- Vorspann: D schlägt ein, der Van rast herein, das Team steigt aus ---------- */
 
   const intro = (hero) => {
     const fx = document.createElement('div');
@@ -143,11 +122,9 @@
     hero.append(fx, flash);
 
     const grid = $('.hero-grid', hero);
-    const logoRow = $('.logo-row', hero);
     const logoD = $('.logo-d', hero);
     const team = $('.logo-team', hero);
     const by = $('.logo-by', hero);
-    const holes = $$('.hole', hero);
     const copy = $$('.hero-copy > *', hero);
     const van = $('.van-drive', hero);
     const vanArt = $('.van-art', hero);
@@ -158,33 +135,24 @@
 
     const tl = gsap.timeline({ defaults: { ease: 'power3.out' } });
 
+    // Das D schlägt ein und wirbelt Staub auf
     tl.fromTo(logoD,
       { autoAlpha: 0, scale: 3.4, rotation: -14, filter: 'blur(10px)' },
       { autoAlpha: 1, scale: 1, rotation: 0, filter: 'blur(0px)', duration: 0.5, ease: 'power4.in' })
       .addLabel('impact')
-      .fromTo(flash, { autoAlpha: 0.75 }, { autoAlpha: 0, duration: 0.5, ease: 'power2.out' }, 'impact')
+      .fromTo(flash, { autoAlpha: 0.45 }, { autoAlpha: 0, duration: 0.45, ease: 'power2.out' }, 'impact')
       .add(() => {
-        shake(grid, 12);
+        shake(grid, 10);
         const p = centerIn(logoD, hero);
-        burst(fx, p.x, p.y, 1.9);
+        dust(fx, p.x - p.w * 0.3, p.y + p.h * 0.45, { count: 6, direction: -1, spread: 120 });
+        dust(fx, p.x + p.w * 0.3, p.y + p.h * 0.45, { count: 6, direction: 1, spread: 120 });
       }, 'impact')
       .set(team, { autoAlpha: 1 }, 'impact')
       .fromTo(teamChars,
         { autoAlpha: 0, x: 160, skewX: -35 },
         { autoAlpha: 1, x: 0, skewX: 0, duration: 0.42, stagger: 0.055, ease: 'back.out(2.2)' }, 'impact+=0.05')
       .fromTo(by, { autoAlpha: 0, y: 24 }, { autoAlpha: 1, y: 0, duration: 0.45 }, 'impact+=0.4')
-      .fromTo(copy, { autoAlpha: 0, y: 36 }, { autoAlpha: 1, y: 0, duration: 0.6, stagger: 0.08 }, 0.1)
-      .addLabel('shots', 'impact+=0.75');
-
-    holes.forEach((hole, i) => {
-      const at = `shots+=${i * 0.15}`;
-      tl.fromTo(hole, { autoAlpha: 0, scale: 2.8 }, { autoAlpha: 1, scale: 1, duration: 0.14, ease: 'power4.out' }, at)
-        .add(() => {
-          const p = centerIn(hole, hero);
-          burst(fx, p.x, p.y, 0.8);
-          shake(logoRow, 5);
-        }, at);
-    });
+      .fromTo(copy, { autoAlpha: 0, y: 36 }, { autoAlpha: 1, y: 0, duration: 0.6, stagger: 0.08 }, 0.1);
 
     const brake = () => {
       wheels.forEach((wheel) => {
@@ -194,7 +162,7 @@
       shake(grid, 3);
     };
 
-    tl.addLabel('van', `shots+=${holes.length * 0.15 + 0.1}`)
+    tl.addLabel('van', 'impact+=0.6')
       .fromTo(van, { autoAlpha: 1, x: () => window.innerWidth * 1.15 }, { x: 0, duration: 1.35, ease: 'power3.out' }, 'van')
       .fromTo(wheels, { rotation: -1440, transformOrigin: '50% 50%' }, { rotation: 0, duration: 1.35, ease: 'power3.out' }, 'van')
       .fromTo(stripe, { clipPath: 'inset(0% 0% 0% 100%)' }, { clipPath: 'inset(0% 0% 0% 0%)', duration: 1.15, ease: 'power3.inOut' }, 'van')
@@ -231,34 +199,76 @@
         });
     }
 
-    return fx;
+    return tl;
   };
 
-  /* ---------- Mitmachen: Klick ins Bild hinterlässt ein Einschussloch ---------- */
+  /* ---------- Sprechblasen: das Team hat was zu sagen ---------- */
 
-  const shooting = (hero, fx) => {
-    const layer = document.createElement('div');
-    layer.className = 'shots';
-    layer.setAttribute('aria-hidden', 'true');
-    hero.appendChild(layer);
-    const shots = [];
-    root.classList.add('armed');
+  const SAYINGS = [
+    ['Ich liebe es, wenn ein Plan funktioniert.', 'Erst der Plan, dann die Action.', 'Jeder Plan fängt mit dem ersten Schritt an.'],
+    ['Ich steig in kein Flugzeug! Wir nehmen den Van.', 'Montag ist Kochtag. Fertiggerichte? Nicht mit uns!'],
+    ['Kein Problem ist zu groß für das D-Team.', 'Wenn sonst keiner mehr hilft: D-Team!'],
+    ['Wann ist der nächste Ausflug?', 'Gemeinsam schaffen wir das!'],
+  ];
 
-    hero.addEventListener('click', (event) => {
-      if (event.target.closest('a, button, input, summary')) return;
-      const h = hero.getBoundingClientRect();
-      const x = event.clientX - h.left;
-      const y = event.clientY - h.top;
-      const hole = spawn(layer, 'shot', x, y);
-      hole.style.setProperty('--r', `${gsap.utils.random(-80, 80)}deg`);
-      shots.push(hole);
-      gsap.fromTo(hole, { autoAlpha: 0, scale: 2.6 }, { autoAlpha: 1, scale: 1, duration: 0.14, ease: 'power4.out' });
-      burst(fx, x, y, 0.9);
-      shake($('.hero-grid', hero), 4);
-      if (shots.length > 14) {
-        const oldest = shots.shift();
-        gsap.to(oldest, { autoAlpha: 0, duration: 0.4, onComplete: () => oldest.remove() });
-      }
+  const talk = (hero, introTl) => {
+    const crew = $('.crew', hero);
+    const mates = $$('.mate-exit', hero);
+    if (!crew || !mates.length) return;
+    const bubble = document.createElement('p');
+    bubble.className = 'bubble';
+    bubble.setAttribute('aria-hidden', 'true');
+    crew.appendChild(bubble);
+
+    const next = mates.map(() => 0);
+    let current;
+    let turn = 0;
+
+    const crewVisible = () => window.scrollY < hero.offsetHeight * 0.15
+      && mates.every((m) => parseFloat(getComputedStyle(m).opacity) > 0.9);
+
+    const say = (i) => {
+      if (!crewVisible()) return;
+      const lines = SAYINGS[i % SAYINGS.length];
+      bubble.textContent = lines[next[i] % lines.length];
+      next[i] += 1;
+      if (current) current.kill();
+      gsap.set(bubble, { autoAlpha: 0, scale: 1, y: 0 });
+
+      // Blase über die Figur setzen, ohne über den Bildschirmrand zu ragen
+      const c = crew.getBoundingClientRect();
+      const m = mates[i].getBoundingClientRect();
+      const center = m.left + m.width / 2 - c.left;
+      const width = bubble.offsetWidth;
+      const min = 12 - c.left;
+      const max = document.documentElement.clientWidth - 12 - width - c.left;
+      const left = Math.max(min, Math.min(max, center - width * 0.3));
+      bubble.style.left = `${left}px`;
+      bubble.style.setProperty('--tail', `${center - left}px`);
+
+      gsap.fromTo(mates[i].firstElementChild, { y: 0 }, { y: -8, duration: 0.14, yoyo: true, repeat: 1, ease: 'power1.out' });
+      current = gsap.timeline()
+        .fromTo(bubble, { autoAlpha: 0, scale: 0.4, y: 12, transformOrigin: `${center - left}px 100%` },
+          { autoAlpha: 1, scale: 1, y: 0, duration: 0.35, ease: 'back.out(2.5)' })
+        .to(bubble, { autoAlpha: 0, scale: 0.85, duration: 0.25, ease: 'power1.in' }, '+=3.4');
+    };
+
+    // Nach dem Aussteigen spricht zuerst der Chef, danach reihum
+    introTl.add(() => {
+      say(0);
+      gsap.timeline({ repeat: -1, delay: 6.5, repeatDelay: 6.5 }).add(() => {
+        turn = (turn + 1) % mates.length;
+        say(turn);
+      });
+    }, '+=0.2');
+
+    // Ein Klick auf eine Figur bringt den nächsten Spruch
+    crew.classList.add('is-talking');
+    mates.forEach((mate, i) => mate.addEventListener('click', () => { turn = i; say(i); }));
+
+    ScrollTrigger.create({
+      trigger: hero, start: 'top top', end: '15% top',
+      onLeave: () => { if (current) current.kill(); gsap.to(bubble, { autoAlpha: 0, duration: 0.2 }); },
     });
   };
 
@@ -444,6 +454,12 @@
     gsap.fromTo('.contact-lead, .contact-list', { autoAlpha: 0, y: 30 }, {
       autoAlpha: 1, y: 0, duration: 0.6, stagger: 0.15, scrollTrigger: { trigger: '.contact-lead', start: 'top 92%' },
     });
+    // Hannibals Spruch knallt wie ein Stempel hin
+    gsap.fromTo('.contact-quote', { autoAlpha: 0, scale: 1.6, rotation: -6 }, {
+      autoAlpha: 1, scale: 1, rotation: 0, duration: 0.45, ease: 'power4.in', transformOrigin: '0% 50%',
+      scrollTrigger: { trigger: '.contact-quote', start: 'top 90%' },
+      onComplete: () => shake($('.contact .wrap'), 4),
+    });
     const phone = $('.phone');
     if (phone) {
       const number = phone.textContent;
@@ -483,7 +499,8 @@
     gsap.registerPlugin(ScrollTrigger);
     const hero = $('.hero');
     gsap.matchMedia().add('(prefers-reduced-motion: no-preference)', () => {
-      if (hero) shooting(hero, intro(hero));
+      root.classList.add('motion');
+      if (hero) talk(hero, intro(hero));
       scenes(hero);
     });
     root.classList.remove('intro');
