@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="theme-color" content="#000000">
+  <title>Impressum – D-Team</title>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="styles.css">
+  <script>try{if(sessionStorage.getItem('dteam-key'))document.documentElement.classList.add('gate-auto')}catch(e){}</script>
+  <style>
+    .gate { min-height: 100vh; min-height: 100dvh; display: flex; flex-direction: column; justify-content: center; padding-top: 3rem; }
+    .gate .wrap { width: 100%; }
+    .gate-auto .gate-inner { visibility: hidden; }
+    .gate-brand { margin: 0 0 1.5rem; font-family: var(--display); font-weight: 700; font-size: clamp(3.5rem, 14vw, 7rem); line-height: .9; }
+    .gate h1 { max-width: 22ch; margin: 0 0 2rem; font-size: clamp(1.35rem, 2.6vw, 1.75rem); font-weight: 700; font-stretch: 90%; line-height: 1.25; }
+    .gate label { display: block; margin-bottom: .4rem; font-weight: 600; font-stretch: 87.5%; }
+    .gate-row { display: flex; flex-wrap: wrap; gap: .75rem; max-width: 34rem; }
+    .gate input { flex: 1 1 14rem; min-height: 48px; padding: .6rem .9rem; border: 2px solid var(--bone); border-radius: 0; background: #000; color: var(--bone); font: 500 1.0625rem/1.2 var(--text); }
+    .gate input:focus-visible { outline: 3px solid var(--stripe); outline-offset: 2px; }
+    .gate button { cursor: pointer; font-family: var(--text); font-size: 1.0625rem; }
+    .gate button:disabled { opacity: .7; cursor: progress; }
+    .gate-error { margin: 1rem 0 0; color: #ff8a9b; font-weight: 600; }
+    .gate .van-side { margin-top: clamp(3rem, 8vw, 6rem); }
+  </style>
+</head>
+<body>
+  <main class="van gate">
+    <div class="wrap gate-inner">
+      <p class="gate-brand" aria-hidden="true">D-TEAM</p>
+      <h1>Diese Vorschau ist passwortgeschützt.</h1>
+      <form id="gate-form">
+        <label for="gate-pw">Passwort</label>
+        <div class="gate-row">
+          <input id="gate-pw" name="password" type="password" autocomplete="current-password" required>
+          <button class="btn btn--red" type="submit">Seite öffnen</button>
+        </div>
+        <p class="gate-error" id="gate-error" role="alert" hidden>Das Passwort stimmt nicht. Bitte noch einmal versuchen.</p>
+      </form>
+      <noscript><p>Zum Öffnen der Seite wird JavaScript benötigt.</p></noscript>
+    </div>
+    <div class="van-side" aria-hidden="true">
+      <svg class="stripe" viewBox="0 0 1440 110" preserveAspectRatio="none" focusable="false">
+        <path d="M0 88 H1088 L1262 0 H1440 V22 H1286 L1112 110 H0 Z"/>
+      </svg>
+      <div class="rocker"></div>
+    </div>
+  </main>
+  <script type="application/json" id="gate-payload">{"iter": 600000, "salt": "sMWWAd5K59ADo7wNY1vTDQ==", "iv": "k3st1WCL6lb7vhzK5CiHfQ==", "ct": "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", "mac": "qAWkfXlzu70RmOp2PDa0vjRk23aAlzDoALxlKz5uF2A="}</script>
+  <script src="gate.js"></script>
+</body>
+</html>
