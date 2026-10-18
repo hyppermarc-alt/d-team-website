@@ -266,6 +266,18 @@
       gsap.fromTo(p, { autoAlpha: 0, y: 30 }, { autoAlpha: 1, y: 0, duration: 0.8, scrollTrigger: { trigger: p, start: 'top 90%' } });
     });
 
+    // Montags-Einsatz: Block fährt hoch, Wochentage erscheinen, der Montag wird gestempelt
+    const mission = $('.mission');
+    if (mission) {
+      const today = $('.week .is-on', mission);
+      const days = $$('.week li', mission).filter((day) => day !== today);
+      gsap.timeline({ scrollTrigger: { trigger: mission, start: 'top 85%' } })
+        .fromTo(mission, { autoAlpha: 0, y: 80 }, { autoAlpha: 1, y: 0, duration: 0.8, ease: 'power3.out' })
+        .fromTo(days, { autoAlpha: 0, y: -20 }, { autoAlpha: 1, y: 0, duration: 0.3, stagger: 0.05, ease: 'back.out(2)' }, '-=0.3')
+        .fromTo(today, { autoAlpha: 0, scale: 4, rotation: -30 }, { autoAlpha: 1, scale: 1.12, rotation: -6, duration: 0.3, ease: 'power4.in' }, '+=0.1')
+        .add(() => shake(mission, 6));
+    }
+
     // Leistungen: Kisten fallen herunter, schlagen auf, Staub fliegt
     const crates = $('.crates');
     if (crates) {
