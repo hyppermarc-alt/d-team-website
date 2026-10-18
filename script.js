@@ -63,6 +63,15 @@
     return { x: r.left - h.left + r.width / 2, y: r.top - h.top + r.height / 2, w: r.width, h: r.height };
   };
 
+  // Waagerechter Abstand von einem Element zur Schiebetür des geparkten Vans
+  const toDoor = (el) => {
+    const van = $('.van-exit');
+    if (!van) return 0;
+    const v = van.getBoundingClientRect();
+    const r = el.getBoundingClientRect();
+    return v.left + v.width * 0.45 - (r.left + r.width / 2);
+  };
+
   const shake = (el, power = 6) => {
     if (!el) return;
     gsap.fromTo(el, { x: 0, y: 0 }, {
@@ -193,6 +202,35 @@
       .to(vanArt, { rotation: -2.4, transformOrigin: '80% 100%', duration: 0.16, yoyo: true, repeat: 1, ease: 'power1.inOut' }, 'van+=0.95')
       .fromTo(headlight, { opacity: 1 }, { opacity: 0.25, duration: 0.07, repeat: 5, yoyo: true, ease: 'none' }, 'van+=1.25');
 
+    // Die Schiebetür geht auf, das Team springt nacheinander heraus
+    const door = $('.van-door', hero);
+    const mates = $$('.mate', hero);
+    const thumb = $('.arm--thumb', hero);
+    const wave = $('.arm--wave', hero);
+    tl.addLabel('crew', 'van+=1.45')
+      .fromTo(door, { opacity: 1, scaleX: 0, transformOrigin: '0% 50%' }, { scaleX: 1, duration: 0.3, ease: 'power2.out' }, 'crew');
+    mates.forEach((mate, i) => {
+      const at = `crew+=${0.3 + i * 0.3}`;
+      tl.fromTo(mate, { autoAlpha: 0, x: toDoor(mate), scale: 0.8, transformOrigin: '50% 100%' },
+        { autoAlpha: 1, x: 0, scale: 1, duration: 0.55, ease: 'power2.out' }, at)
+        .fromTo(mate, { y: 0 }, { keyframes: { y: [0, -38, 0] }, duration: 0.55, ease: 'none' }, at)
+        .add(() => {
+          const p = centerIn(mate, hero);
+          dust(fx, p.x, p.y + p.h / 2, { count: 4, direction: i % 2 ? 1 : -1, spread: 50 });
+        }, `${at}+=0.55`);
+    });
+    if (thumb) {
+      tl.fromTo(thumb, { rotation: 130, transformOrigin: '50% 0%' }, { rotation: 0, duration: 0.4, ease: 'back.out(3)' }, 'crew+=1.5');
+    }
+    if (wave) {
+      tl.to(wave, { rotation: 28, transformOrigin: '50% 0%', duration: 0.18, yoyo: true, repeat: 5, ease: 'sine.inOut' }, 'crew+=1.75')
+        .add(() => {
+          // Ab und zu winkt der Kleine noch einmal
+          gsap.timeline({ repeat: -1, repeatDelay: 6, delay: 5 })
+            .to(wave, { rotation: 28, transformOrigin: '50% 0%', duration: 0.18, yoyo: true, repeat: 5, ease: 'sine.inOut' });
+        });
+    }
+
     return fx;
   };
 
@@ -232,10 +270,12 @@
 
     // Der Van fährt davon, das Logo steigt langsamer
     if (hero) {
-      gsap.timeline({ scrollTrigger: { trigger: hero, start: 'top top', end: 'bottom top', scrub: 0.6 } })
-        .to('.van-exit', { x: () => -window.innerWidth * 1.25, ease: 'power2.in' }, 0)
-        .to('.spin2', { rotation: 1080, transformOrigin: '50% 50%', ease: 'power2.in' }, 0)
-        .to('.logo', { y: -90, ease: 'none' }, 0);
+      gsap.timeline({ scrollTrigger: { trigger: hero, start: 'top top', end: 'bottom top', scrub: 0.6, invalidateOnRefresh: true } })
+        .to('.mate-exit', { x: (i, el) => toDoor(el), autoAlpha: 0, scale: 0.8, transformOrigin: '50% 100%', duration: 0.25, stagger: 0.04, ease: 'power1.in' }, 0)
+        .to('.van-door', { scaleX: 0, transformOrigin: '0% 50%', duration: 0.1 }, 0.33)
+        .to('.van-exit', { x: () => -window.innerWidth * 1.25, duration: 0.6, ease: 'power2.in' }, 0.4)
+        .to('.spin2', { rotation: 1080, transformOrigin: '50% 50%', duration: 0.6, ease: 'power2.in' }, 0.4)
+        .to('.logo', { y: -90, duration: 1, ease: 'none' }, 0);
     }
 
     // Laufband: läuft immer, dreht beim schnellen Scrollen auf und folgt der Richtung
