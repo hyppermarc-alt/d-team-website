@@ -24,6 +24,28 @@
     });
   }
 
+  /* ---------- Hinweis: keine Cookies ---------- */
+  // Bewusst ohne Speicherung: erscheint kurz, verschwindet von selbst oder per Klick.
+
+  const note = $('.cookie-note');
+  if (note) {
+    const hide = () => {
+      note.classList.remove('is-visible');
+      setTimeout(() => { note.hidden = true; }, 450);
+    };
+    setTimeout(() => {
+      note.hidden = false;
+      setTimeout(() => note.classList.add('is-visible'), 30);
+    }, 2500);
+    $('button', note).addEventListener('click', hide);
+    // Nach 12 Sekunden ausblenden, außer jemand liest gerade (Maus oder Tastatur darauf)
+    const autoHide = () => {
+      if (note.matches(':hover, :focus-within')) setTimeout(autoHide, 4000);
+      else hide();
+    };
+    setTimeout(autoHide, 14500);
+  }
+
   /* ---------- Werkzeuge ---------- */
 
   // Text in einzelne Buchstaben bzw. Wörter zerlegen; Screenreader lesen das aria-label
