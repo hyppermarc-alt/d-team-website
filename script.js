@@ -164,7 +164,7 @@
         { autoAlpha: 0, x: 160, skewX: -35 },
         { autoAlpha: 1, x: 0, skewX: 0, duration: 0.42, stagger: 0.055, ease: 'back.out(2.2)' }, 'impact+=0.05')
       .fromTo(by, { autoAlpha: 0, y: 24 }, { autoAlpha: 1, y: 0, duration: 0.45 }, 'impact+=0.4')
-      .fromTo(copy, { autoAlpha: 0, y: 36 }, { autoAlpha: 1, y: 0, duration: 0.65, stagger: 0.1 }, 'impact+=0.25')
+      .fromTo(copy, { autoAlpha: 0, y: 36 }, { autoAlpha: 1, y: 0, duration: 0.6, stagger: 0.08 }, 0.1)
       .addLabel('shots', 'impact+=0.75');
 
     holes.forEach((hole, i) => {
@@ -267,7 +267,7 @@
     });
 
     // Montags-Einsatz: Block fährt hoch, Wochentage erscheinen, der Montag wird gestempelt
-    const mission = $('.mission');
+    const mission = $('#kochen');
     if (mission) {
       const today = $('.week .is-on', mission);
       const days = $$('.week li', mission).filter((day) => day !== today);
@@ -277,6 +277,25 @@
         .fromTo(today, { autoAlpha: 0, scale: 4, rotation: -30 }, { autoAlpha: 1, scale: 1.12, rotation: -6, duration: 0.3, ease: 'power4.in' }, '+=0.1')
         .add(() => shake(mission, 6));
     }
+
+    // Ausflüge: die Reisetickets fliegen herein
+    const trips = $('#ausfluege');
+    if (trips) {
+      gsap.timeline({ scrollTrigger: { trigger: trips, start: 'top 85%' } })
+        .fromTo(trips, { autoAlpha: 0, y: 80 }, { autoAlpha: 1, y: 0, duration: 0.8, ease: 'power3.out' })
+        .fromTo($$('.ticket', trips), { autoAlpha: 0, x: 240, rotation: 14 }, {
+          autoAlpha: 1, x: 0, rotation: (i) => (i % 2 ? 1.5 : -2), duration: 0.6, stagger: 0.15, ease: 'back.out(1.6)',
+        }, '-=0.3')
+        .add(() => shake(trips, 5));
+    }
+
+    // Fotoreihen: die Bilder fliegen wie hingeworfene Abzüge auf den Tisch
+    $$('.mission-gallery').forEach((gallery) => {
+      gsap.fromTo($$('figure', gallery),
+        { autoAlpha: 0, y: 90, scale: 1.3, rotation: () => gsap.utils.random(-28, 28) },
+        { autoAlpha: 1, y: 0, scale: 1, rotation: 0, duration: 0.6, stagger: 0.1, ease: 'back.out(1.4)',
+          scrollTrigger: { trigger: gallery, start: 'top 92%' } });
+    });
 
     // Leistungen: Kisten fallen herunter, schlagen auf, Staub fliegt
     const crates = $('.crates');
@@ -355,8 +374,14 @@
         autoAlpha: 1, x: 0, rotation: 0, duration: 0.9, ease: 'power3.out', scrollTrigger: { trigger: project, start: 'top 90%' },
       });
     });
-    $$('.project').forEach((project) => {
-      project.addEventListener('toggle', () => setTimeout(() => ScrollTrigger.refresh(), 400));
+    $$('details').forEach((item) => {
+      item.addEventListener('toggle', () => setTimeout(() => ScrollTrigger.refresh(), 400));
+    });
+
+    // Häufige Fragen: Zeilen schieben sich nacheinander herein
+    gsap.fromTo('.faq-item', { autoAlpha: 0, x: -50 }, {
+      autoAlpha: 1, x: 0, duration: 0.5, stagger: 0.09, ease: 'power3.out',
+      scrollTrigger: { trigger: '.faq', start: 'top 88%' },
     });
 
     // Referenzen: Städtenamen werden aufgesprüht, Presseliste fährt ein
