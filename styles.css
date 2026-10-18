@@ -1388,6 +1388,12 @@ h2 {
   list-style: none;
 }
 .footer a { text-underline-offset: 3px; }
+.credit {
+  flex-basis: 100%;
+  color: rgba(242, 236, 220, .55);
+  font-size: .8125rem;
+}
+.credit a { color: rgba(242, 236, 220, .8); }
 .footer a:hover { color: var(--bone); }
 
 /* ---------- Rechtstexte (Impressum, Datenschutz) ---------- */
